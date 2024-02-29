@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  ubuntu-basic:
+    build:
+      context: images
+      dockerfile: ubuntu.Dockerfile
+    image: ubuntu-base-models:0.01
+    container_name: ubuntu-base-non-active
+
+  redis:
+    image: redis:alpine
+    container_name: risk-models-redis
+
+  celery-worker-1:
+    build:
+      context: images
+      dockerfile: celery.Dockerfile 
+    image: risk-models-celery-worker:0.01
+    container_name: risk-models-celery-worker-1
+    command: celery -A risk_models_api.model.celery worker -l info  # Corrected Celery app path
+    volumes:
+      - ./risk_models_api:/risk_models_api
+    depends_on:
+      - redis
+      - api
+
+
+  api:
+    build:
+      context: images
+      dockerfile: api.Dockerfile
+    image: risk-models-api-image:0.01
+    container_name: risk-models-api
+    command: ["/api-startup.sh"]
+    ports:
+      - "80:80"
+    volumes:
+      - ./logs/nginx:/var/log/nginx
+      - ./logs/risk_models_api:/var/log/risk_models_api
+      - ./risk_models_api:/risk_models_api
+      - ./conf/api/nginx.conf:/etc/nginx/nginx.conf
+      - ./conf/api/proxy_params:/etc/nginx/proxy_params
+      - ./conf/api/api_uwsgi.ini:/etc/risk_models_api/uwsgi/api_uwsgi.ini
+      - ./startup-scripts/api-startup.sh:/api-startup.sh
+    depends_on:
+      - ubuntu-basic  # No need for condition here

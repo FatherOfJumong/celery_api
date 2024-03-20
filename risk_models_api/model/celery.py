@@ -18,19 +18,19 @@ app = Celery(
     broker_connection_retry_on_startup=True,
 )
 
+
 app.conf.update(
     result_expires=3600,
+    task_routes = {  
+        'risk_models_api.model.tasks.cns.task_1': {
+            'queue': 'queue1',  
+        },
+        'risk_models_api.model.tasks.cns.task_2': { 
+            'queue': 'queue2'   
+        }
+    }
 )
 
-# @after_setup_logger.connect
-# def setup_loggers(logger, *args, **kwargs):
-#     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-#
-#     # FileHandler
-#     fh = logging.FileHandler(log_file)
-#     fh.setFormatter(formatter)
-#     logger.addHandler(fh)
-#
 
 if __name__ == '__main__':
     app.start()

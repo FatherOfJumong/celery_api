@@ -18,13 +18,25 @@ services:
       dockerfile: celery.Dockerfile 
     image: risk-models-celery-worker:0.01
     container_name: risk-models-celery-worker-1
-    command: celery -A risk_models_api.model.celery worker -l info  # Corrected Celery app path
+    command: celery -A risk_models_api.model.celery worker -l info -Q queue1  # Worker 1 on queue1
     volumes:
       - ./risk_models_api:/risk_models_api
     depends_on:
       - redis
       - api
 
+  celery-worker-2: # New worker
+    build:
+      context: images
+      dockerfile: celery.Dockerfile 
+    image: risk-models-celery-worker:0.01
+    container_name: risk-models-celery-worker-2
+    command: celery -A risk_models_api.model.celery worker -l info -Q queue2  # Worker 2 on queue2 
+    volumes:
+      - ./risk_models_api:/risk_models_api
+    depends_on:
+      - redis
+      - api
 
   api:
     build:

@@ -31,12 +31,11 @@ RUN make
 RUN make install
 
 COPY . ./conf/api/requirements.txt /
-COPY . ./conf/instantclient_19_22/ /opt/oracle/instantclient_19_22/
 
 RUN mkdir -p /etc/risk_models_api/uwsgi
 RUN mkdir -p /var/log/risk_models_api
 
-RUN echo /opt/oracle/instantclient_19_22 > /etc/ld.so.conf.d/oracle-instantclient.conf && ldconfig
+#RUN echo /opt/oracle/instantclient_19_22 > /etc/ld.so.conf.d/oracle-instantclient.conf && ldconfig
 
 RUN pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host=files.pythonhosted.org --no-cache-dir -r /requirements.txt
 

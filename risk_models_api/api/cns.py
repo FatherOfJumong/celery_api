@@ -1,33 +1,29 @@
-
 from flask import request, jsonify
 from flask_restx import Resource
-from .src import oracle_config
-from .src import OracleConnection
 import sys
-from risk_models_api.model.tasks import task_1, task_2
+import pickle
+# from risk_models_api.model.tasks import task_1, task_2
 import pandas as pd
+import threading  # Import threading module
 
-from . import (
-    api
-)
+from . import api
+
+# Load the model and data outside of the request handler
 
 
-oracle = OracleConnection(oracle_config)
 
+# Define a lock for synchronization
+predict_lock = threading.Lock()
 
 @api.route('/api/cns/<cns_version>')
-class TestClass(Resource):
+class Main(Resource):
     def get(self, cns_version):
-        result1 = task_1.apply_async(args=["Task 1"]).get()
-        result2 = task_2.apply_async(args=["Task 2"]).get()
-        
-        df1 = pd.DataFrame(result1)
-        df2 = pd.DataFrame(result2)
+        # Acquire the lock before making the prediction
+        with predict_lock:
+            with open("risk_models_api/calibrated_clf.pkl", "rb") as f:
+                clf = pickle.load(f)
+            print("Model loaded successfully!")
+            data = pd.read_csv("risk_models_api/X_test.csv")
+            a = clf.predict(data[0:1])[0]
 
-        # Assuming result1 and result2 are already DataFrames:
-        unified_df = pd.concat([df1, df2])  
-
-        length = len(unified_df) 
-
-        return jsonify({"length": length, 
-                        "status": "Task completed successfully"})
+        return jsonify({"result": f"Model prediction: {a}"})
